@@ -1,54 +1,34 @@
 best <- function(state, outcome) {
-  ## Read outcome data
-  hospital_outcomes <- read.csv("outcome-of-care-measures.csv")
+  hospital_data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  hospital_data[,11] <- suppressWarnings(as.numeric(hospital_data[,11]))
+  hospital_data[,17] <- suppressWarnings(as.numeric(hospital_data[,17]))
+  hospital_data[,23] <- suppressWarnings(as.numeric(hospital_data[,23]))
   
-  ## check that state and outcome are valid
-  states <- unique(hospital_outcomes[,7])
-  outcomes <- c("heart attack", "heart failure", "pneumonia")
-  
-  ## Check if provided state is valid
-  if (!state %in% states) {
-    stop("Invalid state")
+  if (!(state %in% hospital_data$State)) {
+    stop(paste("Error in best(", state, ",", outcome, ") : invalid state", sep = ""))
   }
   
-  ## Check if provided outcome is valid
-  if (!outcome %in% outcomes) {
-    stop("Invalid Outcome")
+  expected_outcomes <- c("heart attack", "heart failure", "pneumonia")
+  if (!(outcome %in% expected_outcomes)) {
+    stop(paste("Error in best(", state, ",", outcome, ") : invalid outcome", sep = ""))
   }
   
-  ## get the subset of data for specified state
-  state_hospital_outcomes <- subset(hospital_outcomes, State == state)
+  state_hospital_data <- subset(hospital_data, State == state)
+  state_hospital_data[,11] <- suppressWarnings(as.numeric(state_hospital_data[,11]))
+  state_hospital_data[,17] <- suppressWarnings(as.numeric(state_hospital_data[,17]))
+  state_hospital_data[,23] <- suppressWarnings(as.numeric(state_hospital_data[,23]))
   
-  ## Get the desired 30-day outcome column#
-  if (outcome == "heart attack") {
-    outcome_column <- 11
-  } 
-  
-  if (outcome == "heart failure") {
-    outcome_column <- 17
-  }
-  
-  if (outcome == "pneumonia") {
-    outcome_column <- 23
-  }
-  
-  ## Get rid of NA's from the data
-  desired_column <- as.numeric(state_hospital_outcomes[,outcome_column])
-  ## Return the hospital name in the state with the lowest
-  ## 30-day death rate
-  
-  ## Get the rows with min outcome values
-  desired_rows <- which.min(desired_column)
-  print(desired_rows)
-  print(state_hospital_outcomes[desired_rows, 1:3])
-  candidate_hospitals <- state_hospital_outcomes[desired_rows,2]
-  
-  ## Sort by the hospital names and 
-  ## return the first one from the sorted list
-  if (length(candidate_hospitals) > 1) {
-    candidate_hospitals_sorted <- sort(unique(candidate_hospitals))
-    as.vector(candidate_hospitals_sorted[1])
-  } else {
-    as.vector(candidate_hospitals[1])
-  }
+  if (outcome == "heart attack")
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,11],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
+  else if (outcome == "heart failure")
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,17],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
+  else
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,23],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
+  return (as.vector(state_hospital_data[1,2]))
 }

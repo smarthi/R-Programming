@@ -1,69 +1,42 @@
 rankhospital <- function(state, outcome, num = "best") {
-  ## Read outcome data
-  hospital_outcomes <- read.csv('outcome-of-care-measures.csv')
-  ## Check that state and outcome are valid
-  states <- unique(hospital_outcomes[,7])
-  outcomes <- c("heart attack", "heart failure", "pneumonia")
+  hospital_data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
+  hospital_data[,11] <- suppressWarnings(as.numeric(hospital_data[,11]))
+  hospital_data[,17] <- suppressWarnings(as.numeric(hospital_data[,17]))
+  hospital_data[,23] <- suppressWarnings(as.numeric(hospital_data[,23]))
   
-  ## Check if provided state is valid
-  if (!state %in% states) {
-    stop("Invalid state")
+  if (!(state %in% hospital_data$State)) {
+    stop(paste("Error in best(", state, ",", outcome, ") : invalid state", sep = ""))
   }
   
-  ## Check if provided outcome is valid
-  if (!outcome %in% outcomes) {
-    stop("Invalid Outcome")
+  expected_outcomes <- c("heart attack", "heart failure", "pneumonia")
+  if (!(outcome %in% expected_outcomes)) {
+    stop(paste("Error in best(", state, ",", outcome, ") : invalid outcome", sep = ""))
   }
   
-  ## Fetch all hospitals for the state
-  state_hospital_outcomes <- subset(hospital_outcomes, State == state)
+  state_hospital_data <- subset(hospital_data, State == state)
+  state_hospital_data[,11] <- suppressWarnings(as.numeric(state_hospital_data[,11]))
+  state_hospital_data[,17] <- suppressWarnings(as.numeric(state_hospital_data[,17]))
+  state_hospital_data[,23] <- suppressWarnings(as.numeric(state_hospital_data[,23]))
   
+  if (outcome == "heart attack")
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,11],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
+  else if (outcome == "heart failure")
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,17],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
+  else
+    state_hospital_data <- state_hospital_data[order(state_hospital_data[,23],
+                                                     state_hospital_data[,2],
+                                                     na.last=NA),]
   
-  ## Get the desired outcome column#
-  if (outcome == "heart attack") {
-    outcome_column <- 11
-  } 
+  if (num == "best")
+    num <- 1
+  else if (num == "worst")
+    num <- nrow(state_hospital_data)
+  else if (num > nrow(state_hospital_data))
+    return (c("NA"))
   
-  if (outcome == "heart failure") {
-    outcome_column <- 17
-  }
-  
-  if (outcome == "pneumonia") {
-    outcome_column <- 23
-  }
-  
-  if (is.numeric(num)) {
-    if (length(state_hospital_outcomes[,2]) < num) {
-      return (NA)
-    }
-  }
-  
-  ## Get rid of NA's from the data
-  desired_column <- as.numeric(state_hospital_outcomes[,outcome_column])
-  good <- !is.na(desired_column)
-  state_hospital_outcomes <- state_hospital_outcomes[good,]
-  
-  ## Return hospital name in that state with the given rank
-  ## 30-day death rate
-
-  ## Get the rows with min outcome values
-  desired_column <- as.numeric(state_hospital_outcomes[,outcome_column])
-  desired_rows <- which(desired_column == min(desired_column))
-  candidate_hospitals <- state_hospital_outcomes[desired_rows,2]
-  
-  ## Sort by the hospital names and 
-  ## return the first one from the sorted list
-  if (length(candidate_hospitals) > 1) {
-    candidate_hospitals <- sort(candidate_hospitals)
-  }  
-  
-  if (is.character(num)) {
-    if (num == 'best') {
-      num = 1
-    } else if (num == 'worst') {
-      num = length(candidate_hospitals[,desired_column])
-    }
-  } 
-  # Return the hospital name with the outcome ranking
-  candidate_hospitals[num, 2]
+  return (as.vector(state_hospital_data[num,2]))
 }
