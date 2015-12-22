@@ -1,0 +1,18 @@
+quit()
+install.packages(c("ggplot2", "plyr", "reshape2"))
+quit()
+script("Statistics_One_Assignment-1.R")
+source("Statistics_One_Assignment-1.R")
+getwd
+getwd()
+setwd()
+getwd()
+setwd("/Users/smarthi/princeton-statistic-homework/R")
+install.packages("languageR")
+z <- 5
+while (z >=3 && z<=10) { print(z) coin <- rbinom(1,1,0.5)  if (coin == 1) {z <- z + 1} else {z <- z - 1}}
+getwd()
+setwd("/Users/smarthi/online_courses/computing_for_data_analysis/week2")
+ls
+ls()
+source("http://spark-public.s3.amazonaws.com/compdata/scripts/getmonitor-test.R")
